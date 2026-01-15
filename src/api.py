@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import logging
 import io
+from src.init_db import init_database
 
 from src.detector import ObjectDetector
 from src.schemas import DetectionResponse, HealthResponse
@@ -35,6 +36,10 @@ detector: ObjectDetector | None = None
 @app.on_event("startup")
 async def startup_event():
     global detector
+    logger.info("initializing database...")
+    init_database()
+    logger.info("database initialized")
+
     logger.info("loading YOLO model...")
     detector = ObjectDetector()
     logger.info("model loaded")
