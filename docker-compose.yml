@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: detection-postgres
+    environment:
+      POSTGRES_USER: detectuser
+      POSTGRES_PASSWORD: detectpass
+      POSTGRES_DB: objectdetection
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U detectuser -d objectdetection"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - detection-network
+
+  api:
+    build: .
+    container_name: detection-api
+    environment:
+      DATABASE_URL: postgresql://detectuser:detectpass@db:5432/objectdetection
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./temp:/app/temp
+      - ./results:/app/results
+    networks:
+      - detection-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  detection-network:
+    driver: bridge
