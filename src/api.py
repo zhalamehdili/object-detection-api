@@ -33,12 +33,18 @@ app.add_middleware(
 detector: ObjectDetector | None = None
 
 
+from src.init_db import init_database
+
 @app.on_event("startup")
 async def startup_event():
     global detector
-    logger.info("initializing database...")
-    init_database()
-    logger.info("database initialized")
+
+    try:
+        logger.info("initializing database...")
+        init_database()
+        logger.info("database initialized")
+    except Exception as e:
+        logger.exception(f"database init failed: {e}")
 
     logger.info("loading YOLO model...")
     detector = ObjectDetector()
